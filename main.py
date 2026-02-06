@@ -1,6 +1,11 @@
 import fastf1 
 import os 
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg') # Or 'Qt5Agg' if you have PyQt installed
+import matplotlib.pyplot as plt
+import time
+
 
 #RACE
 year = 2025
@@ -24,9 +29,31 @@ fastestlap = session.laps.pick_fastest()
 
 telemetry = fastestlap.get_telemetry()
 
+telemetry['RelativeTime'] = (telemetry['Time'] - telemetry['Time'].iloc[0]).dt.total_seconds()
+
+fig, ax = plt.subplots(figsize=(8,8))
+
+ax.plot(telemetry['X'], telemetry['Y'], color= 'black', alpha = 0.3)
+
+car_dot, = ax.plot([], [], 'ro', markersize=8)
+
+waypoints = [0, 67, 82, 150, 200, 250, 300]
+
+for index in waypoints:
+    new_x = telemetry['X'].iloc[index]
+    new_y = telemetry['Y'].iloc[index]
+
+    car_dot.set_data([new_x],[new_y])
+
+    plt.draw()
+    plt.pause(1)
+
+    print(f"Car moved to row {index} at {telemetry['RelativeTime'].iloc[index]}s")
+
+plt.show()
 # The 'Time' column is cumulative from the start of the session.
 # We subtract the time at the very first row to make the lap start at 0.0 seconds.
-telemetry['RelativeTime'] = (telemetry['Time'] - telemetry['Time'].iloc[0]).dt.total_seconds()
+
 
 #print(telemetry[['Time', 'RelativeTime']].head())
 '''
@@ -45,7 +72,7 @@ print(f"Is the driver braking: {row_at_10s['Brake']}")'''
 
 
 
-start_of_lap = telemetry.iloc[:100].copy()
+'''start_of_lap = telemetry.iloc[:100].copy()
 
 speed_delta = np.diff(start_of_lap['Speed']*(5/18))
 
@@ -66,8 +93,7 @@ print(negAcc[['Speed','acc', 'RelativeTime', 'Brake']])
 
 
 
-
-''' mask_300 = (telemetry['Speed'] > 300) & (telemetry['nGear'] < 8)
+ mask_300 = (telemetry['Speed'] > 300) & (telemetry['nGear'] < 8)
 
 fast_rows = telemetry[mask_300]
 
